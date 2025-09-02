@@ -68,3 +68,11 @@ Thumbs.db
 
 # Test outputs
 test-output/
+
+# Gradle
+.gradle/
+build/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+.gradletasknamecache
