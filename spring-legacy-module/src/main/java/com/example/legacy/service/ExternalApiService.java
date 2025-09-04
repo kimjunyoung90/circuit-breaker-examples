@@ -5,15 +5,10 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Random;
-
 @Service
 public class ExternalApiService {
-
     @Autowired
     private MockApiClient mockApiClient;
-
-    private final Random random = new Random();
 
     /**
      * 빠른 응답이 필요한 외부 API 호출

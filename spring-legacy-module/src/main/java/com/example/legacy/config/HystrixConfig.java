@@ -1,7 +1,9 @@
 package com.example.legacy.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import com.netflix.hystrix.contrib.javanica.aop.aspectj.HystrixCommandAspect;
 
 /**
  * Hystrix Configuration
@@ -12,6 +14,12 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableAspectJAutoProxy
 public class HystrixConfig {
     
-    // @HystrixCommand 어노테이션에서 개별 설정을 사용하므로 
-    // Bean 설정은 제거하고 AOP 활성화만 유지
+    /**
+     * HystrixCommandAspect Bean을 등록하여 @HystrixCommand 어노테이션 처리
+     * 이 Bean이 없으면 @HystrixCommand가 동작하지 않음
+     */
+    @Bean
+    public HystrixCommandAspect hystrixCommandAspect() {
+        return new HystrixCommandAspect();
+    }
 }
