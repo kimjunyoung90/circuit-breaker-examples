@@ -13,7 +13,7 @@
     <description>Circuit breaker implementation examples for Spring Boot and Spring Framework 4.3</description>
 
     <modules>
-<!--        <module>springboot-module</module>-->
+        <module>springboot-module</module>
         <module>spring-legacy-module</module>
     </modules>
 

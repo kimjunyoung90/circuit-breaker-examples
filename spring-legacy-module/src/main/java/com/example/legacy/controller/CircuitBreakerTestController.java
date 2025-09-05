@@ -15,79 +15,65 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
-@RequestMapping("/hystrix-test")
+@RequestMapping("/api/test")
 public class CircuitBreakerTestController {
 
     @Autowired
     private ExternalApiService externalApiService;
 
     /**
-     * 사용자 데이터 조회 (정상 케이스)
+     * 1. 정상 API 호출 (항상 성공)
      */
-    @RequestMapping(value = "/user/{userId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/normal/{data}", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<String> getUserData(@PathVariable String userId) {
+    public ResponseEntity<String> callNormalApi(@PathVariable String data) {
         try {
-            String result = externalApiService.getUserData(userId);
+            String result = externalApiService.callNormalApi(data);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("{\"error\":\"" + e.getMessage() + "\"}");
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
 
     /**
-     * 프로필 데이터 조회 (느린 응답)
-     */
-    @RequestMapping(value = "/profile/{userId}", method = RequestMethod.GET)
-    @ResponseBody
-    public ResponseEntity<String> getProfileData(@PathVariable String userId) {
-        try {
-            String result = externalApiService.getProfileData(userId);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("{\"error\":\"" + e.getMessage() + "\"}");
-        }
-    }
-
-    /**
-     * 랜덤 데이터 조회 (50% 확률로 실패)
+     * 2. 랜덤 API 호출 (50% 실패)
      */
     @RequestMapping(value = "/random", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<String> getRandomData() {
+    public ResponseEntity<String> callRandomApi() {
         try {
-            String result = externalApiService.getRandomData();
+            String result = externalApiService.callRandomApi();
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("{\"error\":\"" + e.getMessage() + "\"}");
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
 
     /**
-     * 항상 실패하는 API (Circuit Breaker 테스트용)
+     * 3. 실패 API 호출 (항상 실패)
      */
     @RequestMapping(value = "/failing", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<String> getFailingData() {
+    public ResponseEntity<String> callFailingApi() {
         try {
-            String result = externalApiService.getFailingData();
+            String result = externalApiService.callFailingApi();
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("{\"error\":\"" + e.getMessage() + "\"}");
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
 
     /**
-     * 느린 API (타임아웃 테스트용)
+     * 4. 느린 API 호출 (3초 지연)
      */
     @RequestMapping(value = "/slow", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<String> getSlowData() {
+    public ResponseEntity<String> callSlowApi() {
         try {
-            String result = externalApiService.getSlowData();
+            String result = externalApiService.callSlowApi();
             return ResponseEntity.ok(result);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("{\"error\":\"" + e.getMessage() + "\"}");
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
 
