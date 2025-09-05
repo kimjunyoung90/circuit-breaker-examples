@@ -32,27 +32,6 @@ public class ExternalApiService {
         return "Fallback: Cached data for " + data;
     }
 
-    /**
-     * 느린 외부 API 호출
-     */
-    @HystrixCommand(
-            commandKey = "getProfileData",
-            groupKey = "ProfileService",
-            fallbackMethod = "getProfileDataFallback",
-            commandProperties = {
-                    @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "3"),
-                    @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "60"),
-                    @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "15000"),
-                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "5000")
-            }
-    )
-    public String getProfileData(String userId) {
-        return mockApiClient.callProfileApi(userId);
-    }
-
-    public String getProfileDataFallback(String userId) {
-        return "{\"userId\":\"" + userId + "\", \"profile\":\"Default Profile\", \"status\":\"fallback\"}";
-    }
 
     /**
      * 2. 랜덤 실패 API (50% 확률로 실패)

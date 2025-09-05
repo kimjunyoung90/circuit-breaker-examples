@@ -78,98 +78,20 @@ public class CircuitBreakerTestController {
     }
 
     /**
-     * Circuit Breaker 상태 확인
+     * Circuit Breaker 상태 확인 (간단한 모니터링)
      */
-    @RequestMapping(value = "/circuit-status", method = RequestMethod.GET)
+    @RequestMapping(value = "/status", method = RequestMethod.GET)
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getCircuitBreakerStatus() {
         Map<String, Object> status = new HashMap<>();
         
         // 각 Command의 Circuit Breaker 상태 확인
-        status.put("getUserData", getCircuitBreakerInfo("getUserData"));
-        status.put("getProfileData", getCircuitBreakerInfo("getProfileData"));
-        status.put("getRandomData", getCircuitBreakerInfo("getRandomData"));
-        status.put("getFailingData", getCircuitBreakerInfo("getFailingData"));
-        status.put("getSlowData", getCircuitBreakerInfo("getSlowData"));
+        status.put("normalApi", getCircuitBreakerInfo("callNormalApi"));
+        status.put("randomApi", getCircuitBreakerInfo("callRandomApi"));
+        status.put("failingApi", getCircuitBreakerInfo("callFailingApi"));
+        status.put("slowApi", getCircuitBreakerInfo("callSlowApi"));
         
         return ResponseEntity.ok(status);
-    }
-
-    /**
-     * Circuit Breaker 리셋 (강제로 CLOSED 상태로 변경)
-     */
-    @RequestMapping(value = "/circuit-reset/{commandKey}", method = RequestMethod.POST)
-    @ResponseBody
-    public ResponseEntity<String> resetCircuitBreaker(@PathVariable String commandKey) {
-        try {
-            HystrixCommandKey key = HystrixCommandKey.Factory.asKey(commandKey);
-            HystrixCircuitBreaker circuitBreaker = HystrixCircuitBreaker.Factory.getInstance(key);
-            
-            if (circuitBreaker != null) {
-                // Circuit Breaker를 강제로 닫기 (실제로는 새로운 요청을 통해 자연스럽게 복구되어야 함)
-                return ResponseEntity.ok("{\"message\":\"Circuit breaker reset attempted for " + commandKey + "\"}");
-            } else {
-                return ResponseEntity.badRequest().body("{\"error\":\"Circuit breaker not found for " + commandKey + "\"}");
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("{\"error\":\"" + e.getMessage() + "\"}");
-        }
-    }
-
-    /**
-     * 부하 테스트용 엔드포인트
-     */
-    @RequestMapping(value = "/load-test/{commandType}/{count}", method = RequestMethod.GET)
-    @ResponseBody
-    public ResponseEntity<Map<String, Object>> loadTest(@PathVariable String commandType, @PathVariable int count) {
-        Map<String, Object> results = new HashMap<>();
-        int successCount = 0;
-        int failureCount = 0;
-        int fallbackCount = 0;
-        
-        long startTime = System.currentTimeMillis();
-        
-        for (int i = 0; i < count; i++) {
-            try {
-                String result = null;
-                switch (commandType.toLowerCase()) {
-                    case "user":
-                        result = externalApiService.getUserData("user" + i);
-                        break;
-                    case "random":
-                        result = externalApiService.getRandomData();
-                        break;
-                    case "failing":
-                        result = externalApiService.getFailingData();
-                        break;
-                    case "slow":
-                        result = externalApiService.getSlowData();
-                        break;
-                    default:
-                        return ResponseEntity.badRequest().body(Map.of("error", "Invalid command type: " + commandType));
-                }
-                
-                if (result.contains("\"status\":\"fallback\"")) {
-                    fallbackCount++;
-                } else {
-                    successCount++;
-                }
-            } catch (Exception e) {
-                failureCount++;
-            }
-        }
-        
-        long endTime = System.currentTimeMillis();
-        
-        results.put("commandType", commandType);
-        results.put("totalRequests", count);
-        results.put("successCount", successCount);
-        results.put("failureCount", failureCount);
-        results.put("fallbackCount", fallbackCount);
-        results.put("executionTimeMs", endTime - startTime);
-        results.put("circuitBreakerStatus", getCircuitBreakerInfo(getCommandKeyByType(commandType)));
-        
-        return ResponseEntity.ok(results);
     }
 
     private Map<String, Object> getCircuitBreakerInfo(String commandKey) {
@@ -186,15 +108,5 @@ public class CircuitBreakerTestController {
         }
         
         return info;
-    }
-    
-    private String getCommandKeyByType(String commandType) {
-        switch (commandType.toLowerCase()) {
-            case "user": return "getUserData";
-            case "random": return "getRandomData";
-            case "failing": return "getFailingData";
-            case "slow": return "getSlowData";
-            default: return "getUserData";
-        }
     }
 }
