@@ -60,7 +60,7 @@
         <dependency>
             <groupId>com.netflix.hystrix</groupId>
             <artifactId>hystrix-javanica</artifactId>
-            <version>1.5.18</version>
+            <version>${hystrix.version}</version>
         </dependency>
 
         <!-- Hystrix Metrics Stream (모니터링용) -->
