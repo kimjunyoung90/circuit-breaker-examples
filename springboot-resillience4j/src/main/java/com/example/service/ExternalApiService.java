@@ -1,4 +1,4 @@
-package com.example.springboot.service;
+package com.example.service;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;

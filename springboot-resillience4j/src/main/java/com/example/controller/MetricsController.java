@@ -1,4 +1,4 @@
-package com.example.springboot.controller;
+package com.example.controller;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;

@@ -1,4 +1,4 @@
-package com.example.legacy.service;
+package com.example.service;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;

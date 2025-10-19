@@ -1,6 +1,6 @@
-package com.example.legacy.controller;
+package com.example.controller;
 
-import com.example.legacy.service.ExternalApiService;
+import com.example.service.ExternalApiService;
 import com.netflix.hystrix.HystrixCircuitBreaker;
 import com.netflix.hystrix.HystrixCommandKey;
 import org.springframework.beans.factory.annotation.Autowired;

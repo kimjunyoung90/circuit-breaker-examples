@@ -1,6 +1,6 @@
-package com.example.springboot.controller;
+package com.example.controller;
 
-import com.example.springboot.service.ExternalApiService;
+import com.example.service.ExternalApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
