@@ -17,7 +17,7 @@ Circuit Breaker는 외부 서비스 호출의 **실패를 감지**하고, **자�
 ```bash
 ./gradlew bootRun
 # 또는
-java -jar build/libs/springboot-module-1.0.0.jar
+java -jar build/libs/springboot-resillience4j-1.0.0.jar
 ```
 
 ### 2. 기본 테스트 (포트: 8080)
@@ -151,6 +151,6 @@ public class CircuitBreakerController {
 
 ## 📝 다음 단계
 
-1. **spring-legacy-module**과 API 비교 테스트
+1. **spring-hystrix**와 API 비교 테스트
 2. 다양한 설정값 조정해보기  
 3. 실제 외부 API 연동 시뮬레이션
