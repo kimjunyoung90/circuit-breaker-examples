@@ -18,8 +18,8 @@ Circuit Breaker 패턴을 **이해하고 체험**할 수 있는 간단하고 일
 
 ```
 circuit-breaker-examples/
-├── springboot-module/          # Spring Boot 3.2 + Resilience4j
-└── spring-legacy-module/       # Spring 4.3 + Hystrix
+├── springboot-resillience4j/   # Spring Boot 3.2 + Resilience4j
+└── spring-hystrix/             # Spring 4.3 + Hystrix
 ```
 
 ## 🚀 빠른 테스트
@@ -121,14 +121,14 @@ curl http://localhost:8080/actuator/circuitbreakers
 
 ### Spring Boot Module
 ```bash
-cd springboot-module
+cd springboot-resillience4j
 ./gradlew bootRun
 # 포트: 8080
 ```
 
-### Spring Legacy Module  
+### Spring Legacy Module
 ```bash
-cd spring-legacy-module
+cd spring-hystrix
 mvn spring-boot:run
 # 또는 톰캣에 배포
 # 포트: 8081

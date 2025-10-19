@@ -153,7 +153,7 @@ public class CircuitBreakerTestController {
 
 ## 📝 다음 단계
 
-1. **springboot-module**과 API 비교 테스트
+1. **springboot-resillience4j**와 API 비교 테스트
 2. Hystrix Dashboard 연동
 3. 실제 외부 API 연동 시뮬레이션
 4. Thread Pool 격리 방식 학습

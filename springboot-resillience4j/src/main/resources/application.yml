@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: springboot-module
+    name: springboot-resillience4j
 
 management:
   endpoints:
