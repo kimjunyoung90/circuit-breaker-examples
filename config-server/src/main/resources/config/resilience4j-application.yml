@@ -1,0 +1,39 @@
+# Resilience4j Circuit Breaker 설정 (Spring Boot 모듈용)
+# Config Server에서 동적으로 제공되는 설정
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50           # 실패율 임계값 (50%)
+        wait-duration-in-open-state: 10s     # Open 상태 대기 시간 (10초)
+        sliding-window-size: 5               # 슬라이딩 윈도우 크기 (5개)
+        sliding-window-type: count_based     # 카운트 기반
+        minimum-number-of-calls: 3           # 최소 호출 수 (3번)
+        automatic-transition-from-open-to-half-open-enabled: true
+        permitted-number-of-calls-in-half-open-state: 2
+        record-exceptions:
+          - java.lang.RuntimeException
+          - java.lang.InterruptedException
+        slow-call-duration-threshold: 2s     # 느린 호출 임계값 (2초)
+        slow-call-rate-threshold: 50         # 느린 호출 비율 (50%)
+    instances:
+      # 1. 정상 API - 기본 설정 사용
+      normalApi:
+        base-config: default
+
+      # 2. 랜덤 API - 기본 설정 사용
+      randomApi:
+        base-config: default
+
+      # 3. 실패 API - 더 빠르게 Circuit Open
+      failingApi:
+        base-config: default
+        failure-rate-threshold: 30           # 30% 실패율로 빠르게 Open
+        wait-duration-in-open-state: 5s      # 5초 후 Half-Open
+
+      # 4. 느린 API - 타임아웃 기반 Circuit Breaker
+      slowApi:
+        base-config: default
+        slow-call-duration-threshold: 1s     # 1초 이상이면 느린 호출
+        slow-call-rate-threshold: 30         # 느린 호출 30%로 Open

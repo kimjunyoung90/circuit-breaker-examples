@@ -1,0 +1,34 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        # Native profile: 로컬 파일 시스템에서 설정 파일 읽기
+        native:
+          search-locations: classpath:/config
+        # Git repository 사용 시 (주석 해제하여 사용)
+        # git:
+        #   uri: https://github.com/your-username/config-repo
+        #   default-label: main
+        #   search-paths: circuit-breaker-configs
+        #   clone-on-start: true
+  profiles:
+    active: native
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+    org.springframework.boot: INFO
