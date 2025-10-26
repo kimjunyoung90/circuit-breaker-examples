@@ -16,58 +16,23 @@ public class ExternalApiService {
     @HystrixCommand(
             commandKey = "callNormalApi",
             groupKey = "NormalService",
-            fallbackMethod = "fallbackNormal",
-            commandProperties = {
-                    @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "3"),
-                    @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "50"),
-                    @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "10000"),
-                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000")
-            }
+            fallbackMethod = "fallbackNormal"
     )
-    public String callNormalApi(String data) {
-        return "Normal API Response: " + data;
+    public String callNormalApi() {
+        return "Normal API Response: Success";
     }
 
-    public String fallbackNormal(String data) {
-        return "Fallback: Cached data for " + data;
-    }
-
-
-    /**
-     * 2. 랜덤 실패 API (50% 확률로 실패)
-     */
-    @HystrixCommand(
-            commandKey = "callRandomApi",
-            groupKey = "RandomService", 
-            fallbackMethod = "fallbackRandom",
-            commandProperties = {
-                    @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "3"),
-                    @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "50"),
-                    @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "10000"),
-                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000")
-            }
-    )
-    public String callRandomApi() {
-        return mockApiClient.callRandomApi();
-    }
-
-    public String fallbackRandom() {
-        return "Fallback: Random service temporarily unavailable";
+    public String fallbackNormal() {
+        return "Fallback: Cached data";
     }
 
     /**
-     * 3. 항상 실패하는 API (Circuit Breaker Open 테스트용)
+     * 2. 항상 실패하는 API
      */
     @HystrixCommand(
             commandKey = "callFailingApi",
             groupKey = "FailingService",
-            fallbackMethod = "fallbackFailing",
-            commandProperties = {
-                    @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "3"),
-                    @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "30"),
-                    @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000"),
-                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000")
-            }
+            fallbackMethod = "fallbackFailing"
     )
     public String callFailingApi() {
         return mockApiClient.callFailingApi();
@@ -78,18 +43,12 @@ public class ExternalApiService {
     }
 
     /**
-     * 4. 느린 API (타임아웃 테스트용)
+     * 3. 느린 API (타임아웃 테스트용)
      */
     @HystrixCommand(
             commandKey = "callSlowApi",
             groupKey = "SlowService",
-            fallbackMethod = "fallbackSlow",
-            commandProperties = {
-                    @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "3"),
-                    @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "50"),
-                    @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "10000"),
-                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000")
-            }
+            fallbackMethod = "fallbackSlow"
     )
     public String callSlowApi() {
         return mockApiClient.callSlowApi();

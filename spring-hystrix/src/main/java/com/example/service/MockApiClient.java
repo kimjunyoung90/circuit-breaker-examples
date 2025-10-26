@@ -42,21 +42,6 @@ public class MockApiClient {
     }
 
     /**
-     * 랜덤 API 호출 시뮬레이션 (50% 성공률)
-     */
-    public String callRandomApi() {
-        // 50% 성공률
-        if (random.nextBoolean()) {
-            simulateDelay(200, 800);
-            int randomValue = random.nextInt(1000);
-            return "{\"randomValue\":" + randomValue + ", \"timestamp\":" + System.currentTimeMillis() + ", \"status\":\"success\"}";
-        } else {
-            simulateDelay(100, 500);
-            throw new RuntimeException("Random API call failed with random error");
-        }
-    }
-
-    /**
      * 항상 실패하는 API 호출 시뮬레이션 (Circuit Breaker 테스트용)
      */
     public String callFailingApi() {
@@ -133,7 +118,7 @@ public class MockApiClient {
                 }
                 
             default:
-                return callRandomApi();
+                throw new IllegalArgumentException("Unknown test type: " + testType);
         }
     }
 }

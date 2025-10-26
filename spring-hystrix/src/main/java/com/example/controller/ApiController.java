@@ -6,7 +6,6 @@ import com.netflix.hystrix.HystrixCommandKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -15,8 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
-@RequestMapping("/api/test")
-public class CircuitBreakerTestController {
+@RequestMapping("/api")
+public class ApiController {
 
     @Autowired
     private ExternalApiService externalApiService;
@@ -24,11 +23,11 @@ public class CircuitBreakerTestController {
     /**
      * 1. 정상 API 호출 (항상 성공)
      */
-    @RequestMapping(value = "/normal/{data}", method = RequestMethod.GET)
+    @RequestMapping(value = "/normal", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<String> callNormalApi(@PathVariable String data) {
+    public ResponseEntity<String> callNormalApi() {
         try {
-            String result = externalApiService.callNormalApi(data);
+            String result = externalApiService.callNormalApi();
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
@@ -36,21 +35,7 @@ public class CircuitBreakerTestController {
     }
 
     /**
-     * 2. 랜덤 API 호출 (50% 실패)
-     */
-    @RequestMapping(value = "/random", method = RequestMethod.GET)
-    @ResponseBody
-    public ResponseEntity<String> callRandomApi() {
-        try {
-            String result = externalApiService.callRandomApi();
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 3. 실패 API 호출 (항상 실패)
+     * 2. 실패 API 호출 (항상 실패)
      */
     @RequestMapping(value = "/failing", method = RequestMethod.GET)
     @ResponseBody
@@ -64,7 +49,7 @@ public class CircuitBreakerTestController {
     }
 
     /**
-     * 4. 느린 API 호출 (3초 지연)
+     * 3. 느린 API 호출 (3초 지연)
      */
     @RequestMapping(value = "/slow", method = RequestMethod.GET)
     @ResponseBody
@@ -87,7 +72,6 @@ public class CircuitBreakerTestController {
         
         // 각 Command의 Circuit Breaker 상태 확인
         status.put("normalApi", getCircuitBreakerInfo("callNormalApi"));
-        status.put("randomApi", getCircuitBreakerInfo("callRandomApi"));
         status.put("failingApi", getCircuitBreakerInfo("callFailingApi"));
         status.put("slowApi", getCircuitBreakerInfo("callSlowApi"));
         

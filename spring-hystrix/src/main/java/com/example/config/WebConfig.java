@@ -7,6 +7,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 @Configuration
 @EnableWebMvc
-@ComponentScan(basePackages = "com.example.legacy")
+@ComponentScan(basePackages = "com.example")
 public class WebConfig extends WebMvcConfigurerAdapter {
 }
