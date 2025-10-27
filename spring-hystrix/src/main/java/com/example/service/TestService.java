@@ -1,14 +1,13 @@
 package com.example.service;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ExternalApiService {
+public class TestService {
     @Autowired
-    private MockApiClient mockApiClient;
+    private OuterService outerService;
 
     /**
      * 1. 정상적인 API 호출 (항상 성공)
@@ -35,7 +34,7 @@ public class ExternalApiService {
             fallbackMethod = "fallbackFailing"
     )
     public String callFailingApi() {
-        return mockApiClient.callFailingApi();
+        return outerService.callFailingApi();
     }
 
     public String fallbackFailing() {
@@ -51,7 +50,7 @@ public class ExternalApiService {
             fallbackMethod = "fallbackSlow"
     )
     public String callSlowApi() {
-        return mockApiClient.callSlowApi();
+        return outerService.callSlowApi();
     }
 
     public String fallbackSlow() {
