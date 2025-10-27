@@ -1,159 +1,72 @@
-# Circuit Breaker 예제 - Spring Legacy Module
+# Circuit Breaker 예제
 
-**Hystrix를 사용한 Spring 4.3 Circuit Breaker 구현 예제**
+이 모듈은 Spring 4.3 MVC와 Netflix Hystrix를 이용해 서블릿 기반 애플리케이션에서 회로 차단기를 구성하는 최소 예제를 제공합니다. 정적 속성 로드와 주기적 폴링을 모두 경험할 수 있도록 Archaius 기반 동적 설정까지 포함되어 있습니다.
 
-## 🎯 Circuit Breaker란?
+## 요구 사항
+- JDK 8
+- Maven 3.8+
+- 서블릿 컨테이너(Tomcat 8+)
 
-Circuit Breaker는 외부 서비스 호출의 **실패를 감지**하고, **자동으로 차단**하여 시스템을 보호하는 패턴입니다.
+## 빌드와 실행
+1. 프로젝트 루트에서 `mvn clean package`를 실행하면 `target/spring-hystrix.war` 가 생성됩니다.
+2. 생성된 WAR 파일을 원하는 서블릿 컨테이너에 배포하거나, 내장 서버가 필요하다면 로컬 Tomcat에 복사하십시오.
+3. 애플리케이션 기본 포트는 `8080`이며 컨텍스트 루트는 `/`입니다. 배포 환경에 맞춰 `src/main/resources/application.properties` 를 수정할 수 있습니다.
 
-**3가지 상태:**
-- 🟢 **CLOSED**: 정상 상태, 모든 호출 허용
-- 🔴 **OPEN**: 실패율 초과로 모든 호출 차단 → Fallback 실행
-- 🟡 **HALF_OPEN**: 제한된 테스트 호출로 서비스 복구 확인
+## 주요 디렉터리
+- `com.example.config` : Hystrix 설정(정적 설정, 동적 설정)과 Spring MVC 스캔 설정이 위치합니다.
+- `com.example.controller` : 학습용 REST 엔드포인트(`/api/...`)와 설정 관리용 `/config` API를 제공합니다.
+- `com.example.service` : 외부 시스템을 호출하는 `TestService` 와 외부 시스템 역할을 담당하는 `OuterService` 가 위치합니다.
+- `src/main/resources/hystrix.properties` : 커맨드별 임계값과 타임아웃을 정의하는 프로퍼티 파일입니다.
 
-## 🚀 빠른 시작
-
-### 1. 애플리케이션 실행
+## 학습용 엔드포인트
 ```bash
-mvn spring-boot:run
-# 또는 톰캣에 war 배포
-# 포트: 8081
-```
+# 정상 흐름 (항상 성공)
+curl http://localhost:8080/api/normal
 
-### 2. 기본 테스트 (포트: 8081)
+# 지연 시나리오 (타임아웃 → 폴백)
+curl http://localhost:8080/api/slow
 
-#### ✅ 정상 API (항상 성공)
-```bash
-curl http://localhost:8081/api/test/normal/hello
-# 응답: "Normal API Response: hello"
-```
+# 항상 실패
+curl http://localhost:8080/api/fail
 
-#### 🎲 랜덤 API (50% 확률로 실패)
-```bash
-curl http://localhost:8081/api/test/random
-# 성공: "Random API Response: 1725533425123" 
-# 실패: "Fallback: Random service temporarily unavailable"
-```
-
-#### ❌ 실패 API (항상 실패 → Circuit Open 테스트)
-```bash
-# 3번 연속 호출하여 Circuit Open 유발
-for i in {1..5}; do
-  curl http://localhost:8081/api/test/failing
-  echo ""
-  sleep 1
+# 의도적 실패 (Circuit Open 유도)
+for i in {1..5}; 
+do curl -s http://localhost:8080/api/failing; 
+echo; 
 done
-# 처음: 실패 → Fallback
-# 3번 후: Circuit OPEN → 즉시 Fallback
-```
 
-#### ⏱️ 느린 API (타임아웃 테스트)
+# 현재 Circuit 상태 점검
+curl http://localhost:8080/api/status | jq
+```
+각 엔드포인트의 Hystrix 설정과 응답 메시지는 `TestService` 와 `hystrix.properties` 에 정의되어 있습니다. 실패 시에는 `fallback*` 메서드에서 지정한 문구가 반환됩니다.
+
+## 동적 설정 사용법
+
+### hystrix.properties 폴링
+- `HystrixConfig` 는 기본적으로 `startDynamicHystrixPolling()` 을 호출하여 1초 대기 후 5초 간격으로 `hystrix.properties` 를 재적용합니다. 파일 내용을 수정하면 다음 폴링 주기에 별도 배포 없이 반영됩니다.
+- 정적 로드를 원한다면 `startDynamicHystrixPolling()` 호출을 주석 처리하고 `loadStaticHystrixConfiguration()` 만 유지하여 애플리케이션 기동 시 한 번만 속성을 읽도록 구성할 수 있습니다.
+
+### 설정 변경 API
+- `HystrixConfigController` 는 `/config/{commandKey}` 엔드포인트를 제공하여 런타임에 커맨드별 속성을 조회·수정할 수 있습니다.
+  - `GET /config/{commandKey}` : 유효한 Hystrix 속성 값을 확인합니다.
+  - `PUT /config/{commandKey}` : JSON 페이로드로 `circuitBreaker`, `execution`, `fallback`, `metrics` 섹션을 전달하면 해당 키의 설정을 변경합니다.
+
+예시 요청:
 ```bash
-curl http://localhost:8081/api/test/slow
-# 타임아웃 → Fallback: "Quick response instead of slow service"
+curl -X PUT http://localhost:8080/config/callFailingApi \
+  -H 'Content-Type: application/json' \
+  -d '{
+        "circuitBreaker": {
+          "requestVolumeThreshold": 5,
+          "errorThresholdPercentage": 25
+        },
+        "execution": {
+          "timeoutInMilliseconds": 2500
+        }
+      }'
 ```
+새 설정은 이후 생성되는 Hystrix 명령 인스턴스부터 적용되며, 변경 내역은 응답 `updatedProperties` 필드에서 확인할 수 있습니다.
 
-## 📊 모니터링
-
-### Circuit Breaker 상태 확인
-```bash
-curl http://localhost:8081/api/test/status
-```
-
-## ⚙️ 설정 (Hystrix)
-
-### 어노테이션 기반 설정
-```java
-@HystrixCommand(
-    commandKey = "callNormalApi",
-    groupKey = "NormalService", 
-    fallbackMethod = "fallbackNormal",
-    commandProperties = {
-        @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "3"),
-        @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "50"),
-        @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "10000"),
-        @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "2000")
-    }
-)
-```
-
-### API별 개별 설정
-- **normalApi**: 기본 설정
-- **randomApi**: 기본 설정
-- **failingApi**: 실패율 30%로 빠르게 Open
-- **slowApi**: 1초 타임아웃으로 설정
-
-## 💡 초보자를 위한 학습 순서
-
-### 1단계: 정상 동작 확인
-```bash
-curl http://localhost:8081/api/test/normal/test1
-```
-→ Circuit Breaker가 개입하지 않는 정상 케이스
-
-### 2단계: Fallback 체험
-```bash
-curl http://localhost:8081/api/test/random
-```
-→ 50% 확률로 Fallback 응답 확인
-
-### 3단계: Circuit Open 체험
-```bash
-# 실패 API를 여러 번 호출
-for i in {1..5}; do curl http://localhost:8081/api/test/failing; echo ""; done
-```
-→ 처음엔 실제 API 호출 → 실패 누적 → Circuit OPEN → 즉시 Fallback
-
-### 4단계: 상태 모니터링
-```bash
-curl http://localhost:8081/api/test/status
-```
-→ Circuit Breaker 상태 변화 관찰
-
-## 🔧 구현 포인트
-
-### Service Layer (Hystrix)
-```java
-@HystrixCommand(
-    commandKey = "callNormalApi",
-    fallbackMethod = "fallbackNormal"
-)
-public String callNormalApi(String data) {
-    return "Normal API Response: " + data;
-}
-
-public String fallbackNormal(String data) {
-    return "Fallback: Cached data for " + data;
-}
-```
-
-### Controller Layer
-```java
-@Controller
-@RequestMapping("/api/test")
-public class CircuitBreakerTestController {
-    @RequestMapping(value = "/normal/{data}", method = RequestMethod.GET)
-    @ResponseBody
-    public ResponseEntity<String> callNormalApi(@PathVariable String data) {
-        String result = externalApiService.callNormalApi(data);
-        return ResponseEntity.ok(result);
-    }
-}
-```
-
-## 🆚 Spring Boot 모듈과의 차이점
-
-| 구분 | Spring Legacy (Hystrix) | Spring Boot (Resilience4j) |
-|------|------------------------|-----------------------------|
-| 설정 방식 | 어노테이션 속성 | YAML 기반 |
-| 의존성 | 무거움 (Netflix OSS) | 가벼움 |
-| 상태 | 동일하지만 용어 차이 | CLOSED/OPEN/HALF_OPEN |
-| 모니터링 | 커스텀 컨트롤러 | Spring Boot Actuator |
-| 성능 | Thread Pool 격리 | 더 가볍고 빠름 |
-
-## 📝 다음 단계
-
-1. **springboot-resillience4j**와 API 비교 테스트
-2. Hystrix Dashboard 연동
-3. 실제 외부 API 연동 시뮬레이션
-4. Thread Pool 격리 방식 학습
+## 참고 사항
+- Hystrix 대시보드 스트림(`hystrix.stream`) 서블릿이 `web.xml` 에 등록되어 있으므로 필요 시 대시보드에서 메트릭을 시각화할 수 있습니다.
+- Archaius 폴링 주기와 관련된 주석 설정은 `hystrix.properties` 하단에 정리되어 있습니다. 값의 실험이 끝나면 불필요한 설정은 주석 처리한 채 커밋하십시오.
