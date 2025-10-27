@@ -46,7 +46,7 @@ public class MockApiClient {
      */
     public String callFailingApi() {
         simulateDelay(50, 200);
-        
+
         // 매우 낮은 확률로만 성공 (5%)
         if (random.nextInt(100) < 5) {
             return "{\"message\":\"Miracle! Failing API succeeded\", \"timestamp\":" + System.currentTimeMillis() + "}";
@@ -59,13 +59,7 @@ public class MockApiClient {
      * 느린 API 호출 시뮬레이션 (타임아웃 테스트용)
      */
     public String callSlowApi() {
-        // 60% 확률로 타임아웃을 초과하는 지연
-        if (random.nextInt(100) < 60) {
-            simulateDelay(3000, 6000); // 3-6초 지연 (타임아웃 초과)
-        } else {
-            simulateDelay(500, 1500); // 정상 응답 시간
-        }
-        
+        simulateDelay(3000, 6000); // 3-6초 지연 (타임아웃 초과)
         return "{\"message\":\"Slow API response\", \"processingTime\":\"" + (3000 + random.nextInt(3000)) + "ms\", \"timestamp\":" + System.currentTimeMillis() + "}";
     }
 
@@ -96,7 +90,7 @@ public class MockApiClient {
                     simulateDelay(50, 150);
                     throw new RuntimeException("Burst test API failed for request: " + requestNumber);
                 }
-                
+
             case "degraded":
                 // 점진적으로 성능 저하
                 int successRate = Math.max(20, 90 - (requestNumber * 10));
@@ -106,7 +100,7 @@ public class MockApiClient {
                 } else {
                     throw new RuntimeException("Degraded test API failed for request: " + requestNumber);
                 }
-                
+
             case "recovery":
                 // 점진적으로 복구
                 int recoveryRate = Math.min(90, 10 + (requestNumber * 10));
@@ -116,7 +110,7 @@ public class MockApiClient {
                 } else {
                     throw new RuntimeException("Recovery test API failed for request: " + requestNumber);
                 }
-                
+
             default:
                 throw new IllegalArgumentException("Unknown test type: " + testType);
         }
