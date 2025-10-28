@@ -1,6 +1,6 @@
 package com.example.controller;
 
-import com.example.service.TestService;
+import com.example.service.MyService;
 import com.netflix.hystrix.HystrixCircuitBreaker;
 import com.netflix.hystrix.HystrixCommandKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +15,10 @@ import java.util.Map;
 
 @Controller
 @RequestMapping("/api")
-public class TestController {
+public class MyServiceController {
 
     @Autowired
-    private TestService testService;
+    private MyService myService;
 
     /**
      * 1. 정상 API 호출 (항상 성공)
@@ -27,7 +27,7 @@ public class TestController {
     @ResponseBody
     public ResponseEntity<String> callNormalApi() {
         try {
-            String result = testService.callNormalApi();
+            String result = myService.callNormalApi();
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
@@ -41,7 +41,7 @@ public class TestController {
     @ResponseBody
     public ResponseEntity<String> callFailingApi() {
         try {
-            String result = testService.callFailingApi();
+            String result = myService.callFailingApi();
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
@@ -55,7 +55,7 @@ public class TestController {
     @ResponseBody
     public ResponseEntity<String> callSlowApi() {
         try {
-            String result = testService.callSlowApi();
+            String result = myService.callSlowApi();
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
