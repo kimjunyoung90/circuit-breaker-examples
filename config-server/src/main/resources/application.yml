@@ -7,17 +7,17 @@ spring:
   cloud:
     config:
       server:
-        # Native profile: 로컬 파일 시스템에서 설정 파일 읽기
+        # Native 모드: 로컬 파일 시스템/classpath에 있는 파일을 읽어서 설정 파일로 제공
         native:
           search-locations: classpath:/config
-        # Git repository 사용 시 (주석 해제하여 사용)
-        # git:
-        #   uri: https://github.com/your-username/config-repo
-        #   default-label: main
-        #   search-paths: circuit-breaker-configs
-        #   clone-on-start: true
+        # Git 저장소에서 설정을 읽어올 때
+        git:
+          uri: https://github.com/your-username/config-repo
+          default-label: main
+          search-paths: circuit-breaker-configs
+          clone-on-start: true
   profiles:
-    active: native
+    active: native # 설정 파일을 읽어 올 모드 native or git 둘 중 하나 선택
 
 management:
   endpoints:
