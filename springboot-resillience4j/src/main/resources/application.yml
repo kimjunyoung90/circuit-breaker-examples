@@ -1,19 +1,6 @@
 server:
   port: 8080
 
-spring:
-  application:
-    name: resilience4j-application
-  # config server 설정
-  # Spring Boot 2.4 이상
-  config:
-    import: configserver:http://localhost:8888
-  # Spring Boot 2.3 이하
-#  cloud:
-#    config:
-#      uri: http://localhost:8888
-#      fail-fast: true # Config Server 호출이 실패하는 경우 애플리케이션 기동을 실패하고 즉시 에러를 던짐(운영 환경에서 조기 문제 발견)
-
 management:
   endpoints:
     web:

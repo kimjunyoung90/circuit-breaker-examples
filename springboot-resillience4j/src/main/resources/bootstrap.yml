@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: resilience4j-application
+  # config server 설정
+  # 1. Spring Boot 2.4 이상
+  config:
+    import: configserver:http://localhost:8888
+  # 2. Spring Boot 2.3 이하
+#  cloud:
+#    config:
+#      uri: http://localhost:8888
+#      fail-fast: true
+
