@@ -3,13 +3,22 @@ server:
 
 spring:
   application:
-    name: springboot-resillience4j
+    name: resilience4j-application
+  # config server 설정
+  # Spring Boot 2.4 이상
+  config:
+    import: configserver:http://localhost:8888
+  # Spring Boot 2.3 이하
+#  cloud:
+#    config:
+#      uri: http://localhost:8888
+#      fail-fast: true # Config Server 호출이 실패하는 경우 애플리케이션 기동을 실패하고 즉시 에러를 던짐(운영 환경에서 조기 문제 발견)
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,circuitbreakers,circuitbreakerevents
+        include: health, info, metrics, env, circuitbreakers, circuitbreakerevents, refresh
   endpoint:
     health:
       show-details: always
@@ -17,49 +26,14 @@ management:
       enabled: true
     circuitbreakers:
       enabled: true
-
-# Resilience4j Circuit Breaker 설정
-resilience4j:
-  circuitbreaker:
-    configs:
-      default:
-        failure-rate-threshold: 50           # 실패율 임계값 (50%)
-        wait-duration-in-open-state: 10s     # Open 상태 대기 시간 (10초)
-        sliding-window-size: 5               # 슬라이딩 윈도우 크기 (5개)
-        sliding-window-type: count_based     # 카운트 기반
-        minimum-number-of-calls: 3           # 최소 호출 수 (3번)
-        automatic-transition-from-open-to-half-open-enabled: true
-        permitted-number-of-calls-in-half-open-state: 2
-        record-exceptions:
-          - java.lang.RuntimeException
-          - java.lang.InterruptedException
-        slow-call-duration-threshold: 2s     # 느린 호출 임계값 (2초)
-        slow-call-rate-threshold: 50         # 느린 호출 비율 (50%)
-    instances:
-      # 1. 정상 API - 기본 설정 사용
-      normalApi:
-        base-config: default
-        
-      # 2. 랜덤 API - 기본 설정 사용  
-      randomApi:
-        base-config: default
-        
-      # 3. 실패 API - 더 빠르게 Circuit Open
-      failingApi:
-        base-config: default
-        failure-rate-threshold: 30           # 30% 실패율로 빠르게 Open
-        wait-duration-in-open-state: 5s      # 5초 후 Half-Open
-        
-      # 4. 느린 API - 타임아웃 기반 Circuit Breaker
-      slowApi:
-        base-config: default
-        slow-call-duration-threshold: 1s     # 1초 이상이면 느린 호출
-        slow-call-rate-threshold: 30         # 느린 호출 30%로 Open
+    env:
+      show-values: ALWAYS
 
 # 로깅 설정
 logging:
   level:
     com.example.springboot: DEBUG
     io.github.resilience4j: DEBUG
+    org.springframework.cloud.config: DEBUG
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
