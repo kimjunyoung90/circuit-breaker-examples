@@ -30,7 +30,7 @@ mvn clean package
 > 2. `Deployment` 탭에서 `spring-hystrix.war` 아티팩트를 추가합니다.
 > 3. `Application context`를 `/spring-hystrix`로 설정하고 서버를 실행합니다.
 
-서버가 정상적으로 실행되면 `http://localhost:8081/spring-hystrix/` 경로로 애플리케이션에 접근할 수 있습니다. (포트는 8081로 설정되어 있습니다.)
+서버가 정상적으로 실행되면 `http://localhost:8080/spring-hystrix/` 경로로 애플리케이션에 접근할 수 있습니다. (포트는 8080로 설정되어 있습니다.)
 
 ---
 
@@ -43,7 +43,7 @@ mvn clean package
 
 ```bash
 # 'normal' API 호출
-curl http://localhost:8081/spring-hystrix/api/test/normal
+curl http://localhost:8080/spring-hystrix/api/normal
 ```
 **예상 결과:**
 ```
@@ -54,10 +54,15 @@ Normal API Response
 `failing` API는 항상 실패합니다. 반복적으로 호출하여 실패율 임계치를 넘기면 서킷이 OPEN 상태로 전환되는 것을 확인합니다.
 
 ```bash
-# 'failing' API를 5번 연속 호출
-for i in {1..5}; do
+# 'falling' API 단건 호출
+curl http://localhost:8080/spring-hystrix/api/failing
+```
+
+```bash
+# 'failing' API를 100번 연속 호출
+for i in {1..100}; do
   echo -n "호출 $i: "
-  curl http://localhost:8081/spring-hystrix/api/test/failing
+  curl http://localhost:8080/spring-hystrix/api/failing
   echo ""
   sleep 1
 done
@@ -71,7 +76,16 @@ done
 
 ```bash
 # 'slow' API 호출
-curl http://localhost:8081/spring-hystrix/api/test/slow
+curl http://localhost:8080/spring-hystrix/api/slow
+```
+```bash
+# 'slow' API를 100번 연속 호출
+for i in {1..100}; do
+  echo -n "호출 $i: "
+  curl http://localhost:8080/spring-hystrix/api/slow
+  echo ""
+  sleep 1
+done
 ```
 **예상 결과:**
 - 설정된 타임아웃(2초) 이후 `Fallback: Slow service is unavailable` 응답을 반환합니다.
@@ -80,15 +94,10 @@ curl http://localhost:8081/spring-hystrix/api/test/slow
 ### 4단계: 서킷 상태 모니터링하기
 이 프로젝트는 서킷의 상태를 확인할 수 있는 2가지 방법을 제공합니다.
 
-**1. 사용자 정의 API로 상태 확인**
-```bash
-# 모든 서킷 브레이커의 현재 상태를 간략하게 확인
-curl http://localhost:8081/spring-hystrix/api/test/circuit-status
-```
-**2. Hystrix 스트림으로 실시간 데이터 확인**
+**1. Hystrix 스트림으로 실시간 데이터 확인**
 ```bash
 # Hystrix가 제공하는 실시간 메트릭 스트림을 직접 확인
-curl http://localhost:8081/spring-hystrix/hystrix.stream
+curl http://localhost:8080/spring-hystrix/hystrix.stream
 ```
 이 스트림은 Hystrix Dashboard에 연결하여 시각적으로 모니터링하는 데 사용됩니다. (아래 `Hystrix Dashboard 연동` 참고)
 
@@ -121,8 +130,8 @@ hystrix.command.callSlowApi.execution.isolation.thread.timeoutInMilliseconds=200
 ### Hystrix Dashboard 연동
 이 프로젝트는 Hystrix의 상태를 실시간으로 시각화하여 보여주는 **Hystrix Dashboard**와 연동할 수 있습니다.
 
-1.  별도의 Hystrix Dashboard 애플리케이션을 실행합니다. (예: `springboot-resillience4j` 프로젝트에 대시보드를 추가하여 사용 가능)
-2.  대시보드 UI에서 이 프로젝트의 메트릭 스트림 주소인 `http://localhost:8081/spring-hystrix/hystrix.stream` 을 입력합니다.
+1.  별도의 Hystrix Dashboard 애플리케이션을 실행합니다. (예: `hystrix-dashboard` 프로젝트에 대시보드를 추가하여 사용 가능)
+2.  대시보드 UI에서 이 프로젝트의 메트릭 스트림 주소인 `http://localhost:8080/spring-hystrix/hystrix.stream` 을 입력합니다.
 3.  'Monitor Stream' 버튼을 클릭하면 실시간으로 서킷의 상태, 요청량, 실패율 등을 그래프로 확인할 수 있습니다.
 
 ### 동적 설정 변경
@@ -130,11 +139,12 @@ hystrix.command.callSlowApi.execution.isolation.thread.timeoutInMilliseconds=200
 
 **1. `hystrix.properties` 파일 폴링**
 - 프로젝트는 5초마다 `hystrix.properties` 파일의 변경 사항을 감지하여 자동으로 설정에 반영합니다. (Archaius 라이브러리 사용)
+- HystrixConfig에 `startDynamicHystrixPolling`이 설정을 동적으로 로드하는 기능을 활성화 하는 설정입니다. 해당 설정이 적용되지 않으면 기본값인 1분마다 설정을 동적으로 로드합니다.
 
 **2. API를 통한 설정 변경**
 - 아래와 같이 `PUT` 요청을 보내면 `callFailingApi` 커맨드의 타임아웃과 실패율 임계치를 동적으로 변경할 수 있습니다.
 ```bash
-curl -X PUT http://localhost:8081/spring-hystrix/api/config/callFailingApi \
+curl -X PUT http://localhost:8080/spring-hystrix/api/config/callFailingApi \
   -H 'Content-Type: application/json' \
   -d '{
         "circuitBreaker": {
@@ -150,6 +160,7 @@ curl -X PUT http://localhost:8081/spring-hystrix/api/config/callFailingApi \
 
 ## 🔧 핵심 구현 코드 (`MyService.java`)
 서비스 로직에 `@HystrixCommand` 어노테이션을 추가하여 서킷 브레이커를 적용합니다.
+설정값들은 `hystrix.properties`에 입력된 설정을 따릅니다.
 
 ```java
 @Service
