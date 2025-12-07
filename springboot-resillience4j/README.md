@@ -43,7 +43,7 @@ Config Server가 `http://localhost:8888`에서 실행됩니다.
 
 ```bash
 # 'normal' API 호출
-curl http://localhost:8080/api/test/normal
+curl http://localhost:8080/api/normal
 ```
 **예상 결과:**
 ```
@@ -54,10 +54,15 @@ External API Response: Success
 `failing` API는 항상 실패하도록 설정되어 있습니다. 반복적으로 호출하여 실패율 임계치를 넘기면 서킷이 OPEN 상태로 전환되는 것을 확인합니다.
 
 ```bash
+# 'failing' API 호출
+curl http://localhost:8080/api/failing
+```
+
+```bash
 # 'failing' API를 5번 연속 호출
 for i in {1..5}; do
   echo -n "호출 $i: "
-  curl http://localhost:8080/api/test/failing
+  curl http://localhost:8080/api/failing
   echo ""
   sleep 1
 done
@@ -70,10 +75,15 @@ done
 `slow` API는 응답 시간이 길어 타임아웃을 유발합니다. Resilience4j는 단순히 실패하는 것뿐만 아니라, 응답이 느린 호출의 비율(`slowCallRateThreshold`)이 임계치를 넘어도 서킷을 OPEN 상태로 전환합니다.
 
 ```bash
+# 'slow' API 호출
+curl http://localhost:8080/api/slow
+```
+
+```bash
 # 'slow' API를 여러 번 호출하여 느린 호출 비율을 높입니다.
 for i in {1..5}; do
   echo -n "호출 $i: "
-  curl http://localhost:8080/api/test/slow
+  curl http://localhost:8080/api/slow
   echo ""
 done
 ```
