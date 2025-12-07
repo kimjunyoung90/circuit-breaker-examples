@@ -4,10 +4,10 @@ server:
 spring:
   application:
     name: resilience4j-application
-  # config server 설정
+  # config server 설정 (optional - 없어도 로컬 설정으로 동작)
   # 1. Spring Boot 2.4 이상
   config:
-    import: configserver:http://localhost:8888
+    import: optional:configserver:http://localhost:8888
   # 2. Spring Boot 2.3 이하
 #  cloud:
 #    config:
@@ -29,11 +29,43 @@ management:
     env:
       show-values: ALWAYS
 
+# Circuit Breaker 설정
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50        # 실패율 50% 초과 시 OPEN
+        wait-duration-in-open-state: 10s  # OPEN 후 10초 대기
+        sliding-window-type: COUNT_BASED  # 카운트 기반 슬라이딩 윈도우
+        sliding-window-size: 5            # 최근 5번 호출 추적
+        minimum-number-of-calls: 3        # 최소 3번 호출 후 판단
+        permitted-number-of-calls-in-half-open-state: 2  # HALF_OPEN 시 2번 테스트
+        automatic-transition-from-open-to-half-open-enabled: true
+        slow-call-duration-threshold: 1s  # 1초 이상이면 느린 호출
+        slow-call-rate-threshold: 100     # 느린 호출 100%면 OPEN
+
+    instances:
+      normalApi:
+        base-config: default
+
+      failingApi:
+        base-config: default
+        failure-rate-threshold: 30        # 30% 실패율로 빠르게 OPEN
+
+      slowApi:
+        base-config: default
+        slow-call-duration-threshold: 1s  # 1초 이상이면 느린 호출
+        slow-call-rate-threshold: 30      # 느린 호출 30%면 OPEN
+
+  timelimiter:
+    instances:
+      slowApi:
+        timeout-duration: 1s              # 1초 타임아웃
+
 # 로깅 설정
 logging:
   level:
-    com.example.springboot: DEBUG
+    com.example: DEBUG
     io.github.resilience4j: DEBUG
-    org.springframework.cloud.config: DEBUG
   pattern:
     console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
