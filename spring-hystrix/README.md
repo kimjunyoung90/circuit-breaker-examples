@@ -1,86 +1,178 @@
-# Circuit Breaker 예제 - Spring MVC + Hystrix
+# Hystrix를 이용한 서킷 브레이커 예제 (Spring MVC)
 
-Spring 4.3 MVC와 Netflix Hystrix를 이용하여 **레거시 서블릿 환경에서 Circuit Breaker를 체험**할 수 있는 예제입니다. Archaius를 활용한 동적 설정, Hystrix Dashboard 연동, 다양한 실패 시나리오를 모두 한 자리에서 실습할 수 있습니다.
+**Spring 4.3 MVC와 Netflix Hystrix를 사용하여 레거시 서블릿 환경에서 서킷 브레이커 패턴을 실습하는 프로젝트입니다.**
 
-## 요구 사항
-- JDK 8
-- Maven 3.8+
-- 서블릿 컨테이너(Tomcat 8+) 또는 IDE 내장 Tomcat
+## 🎯 이 프로젝트의 목표
+Hystrix 서킷 브레이커의 세 가지 상태(**CLOSED**, **OPEN**, **HALF_OPEN**)가 어떻게 동작하는지 직접 체험하고, 동적 설정 변경, 대시보드 연동 등 Hystrix의 주요 기능을 학습하는 것을 목표로 합니다.
 
-## Hystrix 한눈에 보기
-- 🟢 **CLOSED**: 정상 상태, 모든 호출 허용
-- 🔴 **OPEN**: 실패율이 임계치를 넘으면 모든 호출 차단 → 즉시 Fallback 실행
-- 🟡 **HALF_OPEN**: 제한된 수의 호출만 통과시켜 복구 여부 확인
-- Hystrix는 타임아웃/실패율/슬로우콜 비율을 모니터링하여 자동으로 상태를 전환하며, 각 상태는 `/hystrix.stream` 스트림과 `/api/status` 응답에서 확인할 수 있습니다.
+- 🟢 **CLOSED**: 정상 상태. 모든 요청을 정상적으로 처리합니다.
+- 🔴 **OPEN**: 임계치 이상의 실패가 감지된 상태. 추가 요청을 즉시 차단하고 Fallback 응답을 반환하여 시스템을 보호합니다.
+- 🟡 **HALF_OPEN**: OPEN 상태에서 일정 시간이 지난 후, 서비스가 복구되었는지 확인하기 위해 제한된 테스트 요청을 보내는 상태입니다.
 
-## 실행 안내 (IntelliJ 예시)
-1. Run/Debug Config에서 Tomcat 서버를 추가하고, `spring-hystrix` WAR 아티팩트를 배포합니다.
-2. Application context를 `/spring-hystrix` (또는 원하는 값)으로 설정하고 8080 포트를 사용합니다.
-3. 서버를 실행한 뒤 `http://localhost:8080/spring-hystrix/api/normal` 등 엔드포인트가 응답하는지 확인합니다.
+---
 
-## 엔드포인트 빠르게 살펴보기
+## 🚀 빠른 시작
+
+이 프로젝트는 Spring Boot가 아닌 전통적인 Spring MVC 프로젝트이므로, 서블릿 컨테이너(예: Tomcat)에 배포하여 실행해야 합니다.
+
+### 1단계: 프로젝트 빌드
+Maven을 사용하여 프로젝트를 빌드하고 `.war` 파일을 생성합니다.
 ```bash
-# 정상 흐름 (항상 성공)
-curl http://localhost:8080/spring-hystrix/api/normal
-
-# 지연 시나리오 (타임아웃 → 폴백)
-curl http://localhost:8080/spring-hystrix/api/slow
-
-# 항상 실패
-a=`date +%s`; curl "http://localhost:8080/spring-hystrix/api/failing?ts=$a"
-
-# Circuit 상태 확인 (단순 JSON)
-curl http://localhost:8080/spring-hystrix/api/status | jq
+mvn clean package
 ```
-각 엔드포인트의 Hystrix 설정과 응답 메시지는 `MyService` 와 `hystrix.properties` 에 정의되어 있으며, 실패 시 `fallback*` 메서드의 문구가 반환됩니다.
+빌드가 성공하면 `target/spring-hystrix.war` 파일이 생성됩니다.
 
-## 실습 시나리오
-1. **애플리케이션 실행**: IDE에서 Tomcat을 `/spring-hystrix` 컨텍스트로 기동하거나, WAR를 로컬 톰캣에 배포합니다.
-2. **정상 호출 확인**: `curl http://localhost:8080/spring-hystrix/api/normal` 을 여러 번 호출하여 성공 응답과 폴백 문구를 비교합니다.
-3. **실패 시나리오 재현**: `for i in {1..5}; do curl -s http://localhost:8080/spring-hystrix/api/failing; echo; done` 으로 연속 실패를 유도해 Fallback 응답을 확인합니다.
-4. **느린 호출과 타임아웃**: `curl http://localhost:8080/spring-hystrix/api/slow` 로 긴 지연을 유발하고, Hystrix가 타임아웃 후 폴백을 반환하는지 살펴봅니다.
-5. **서킷 상태 점검**: `/api/status` 엔드포인트를 호출하여 각 커맨드의 `isOpen`, `allowRequest` 값을 확인합니다.
-6. **스트림 및 대시보드 관찰**: 별도 Hystrix Dashboard에서 `http://localhost:8080/spring-hystrix/hystrix.stream` 을 모니터링하거나, `curl http://localhost:8080/spring-hystrix/hystrix.stream` 으로 SSE 이벤트를 직접 확인합니다.
+### 2단계: Tomcat 서버에 배포 및 실행
+사용하는 IDE(IntelliJ, Eclipse 등)에 내장된 Tomcat 서버를 사용하거나, 별도로 설치된 Tomcat의 `webapps` 디렉토리에 위에서 생성된 `.war` 파일을 배포합니다.
 
-## Hystrix Dashboard 연동
-- 애플리케이션은 `/hystrix.stream` 에서 Server-Sent Events 형식의 메트릭을 노출합니다. 브라우저에서는 빈 화면처럼 보이나, SSE 클라이언트나 대시보드에 연결하면 실시간 메트릭이 표시됩니다.
-- 별도의 Hystrix Dashboard 애플리케이션(Spring Boot 기준 `spring-cloud-starter-netflix-hystrix-dashboard`)을 실행하고, UI에서 `http://localhost:8080/spring-hystrix/hystrix.stream` 을 입력하면 이 모듈의 메트릭을 모니터링할 수 있습니다.
-- 여러 인스턴스를 동시에 보고 싶다면 Turbine 서버를 띄우고 각 인스턴스의 `/hystrix.stream` 을 등록하면 됩니다.
+> **IntelliJ 실행 Tip:**
+> 1. `Run/Debug Configurations`에서 `Tomcat Server > Local`을 추가합니다.
+> 2. `Deployment` 탭에서 `spring-hystrix.war` 아티팩트를 추가합니다.
+> 3. `Application context`를 `/spring-hystrix`로 설정하고 서버를 실행합니다.
 
-## 동적 설정 사용법
+서버가 정상적으로 실행되면 `http://localhost:8081/spring-hystrix/` 경로로 애플리케이션에 접근할 수 있습니다. (포트는 8081로 설정되어 있습니다.)
 
-### hystrix.properties 폴링
-- `HystrixConfig` 는 기본적으로 `startDynamicHystrixPolling()` 을 호출하여 1초 대기 후 5초 간격으로 `hystrix.properties` 를 재적용합니다. 파일 내용을 수정하면 다음 폴링 주기에 별도 배포 없이 반영됩니다.
-- 정적 로드를 원한다면 `startDynamicHystrixPolling()` 호출을 주석 처리하고 `loadStaticHystrixConfiguration()` 만 유지하여 애플리케이션 기동 시 한 번만 속성을 읽도록 구성할 수 있습니다.
+---
 
-### 설정 변경 API
-- `HystrixConfigController` 는 `/config/{commandKey}` 엔드포인트를 제공하여 런타임에 커맨드별 속성을 조회·수정할 수 있습니다.
-  - `GET /config/{commandKey}` : 현재 적용 중인 Hystrix 속성 값을 확인합니다.
-  - `PUT /config/{commandKey}` : JSON 페이로드로 `circuitBreaker`, `execution`, `fallback`, `metrics` 섹션을 전달하면 해당 키의 설정을 변경합니다.
+## 💡 서킷 브레이커 시나리오별 실습
 
-예시 요청:
+프로젝트가 제공하는 3가지 API를 통해 서킷 브레이커의 동작을 단계별로 실습합니다.
+
+### 1단계: 정상 호출 (✅ CLOSED 상태)
+가장 기본적인 성공 사례입니다. 서킷 브레이커가 개입하지 않고 API가 정상적으로 응답합니다.
+
 ```bash
-curl -X PUT http://localhost:8080/spring-hystrix/config/callFailingApi \
+# 'normal' API 호출
+curl http://localhost:8081/spring-hystrix/api/test/normal
+```
+**예상 결과:**
+```
+Normal API Response
+```
+
+### 2단계: 실패율 증가로 서킷 열기 (🔴 OPEN 상태)
+`failing` API는 항상 실패합니다. 반복적으로 호출하여 실패율 임계치를 넘기면 서킷이 OPEN 상태로 전환되는 것을 확인합니다.
+
+```bash
+# 'failing' API를 5번 연속 호출
+for i in {1..5}; do
+  echo -n "호출 $i: "
+  curl http://localhost:8081/spring-hystrix/api/test/failing
+  echo ""
+  sleep 1
+done
+```
+**예상 결과:**
+- **처음 1~4번 호출**: API가 실제로 호출되지만 실패하고, `Fallback: Failing service is unavailable` 메시지가 나타납니다.
+- **5번째 호출부터**: 실패율이 설정된 임계치(`requestVolumeThreshold=5`)를 초과하여 서킷이 **OPEN** 상태로 변경됩니다. 이후의 호출은 API를 실제로 호출하지 않고 즉시 Fallback을 반환합니다.
+
+### 3단계: 느린 응답으로 서킷 열기 (🔴 OPEN 상태)
+`slow` API는 응답 시간이 길어 타임아웃을 유발합니다. Hystrix는 설정된 타임아웃(`timeoutInMilliseconds`)을 초과하면 요청을 실패로 간주하고 Fallback을 실행합니다.
+
+```bash
+# 'slow' API 호출
+curl http://localhost:8081/spring-hystrix/api/test/slow
+```
+**예상 결과:**
+- 설정된 타임아웃(2초) 이후 `Fallback: Slow service is unavailable` 응답을 반환합니다.
+- 타임아웃도 실패로 간주되므로, 반복 호출 시 서킷이 OPEN 될 수 있습니다.
+
+### 4단계: 서킷 상태 모니터링하기
+이 프로젝트는 서킷의 상태를 확인할 수 있는 2가지 방법을 제공합니다.
+
+**1. 사용자 정의 API로 상태 확인**
+```bash
+# 모든 서킷 브레이커의 현재 상태를 간략하게 확인
+curl http://localhost:8081/spring-hystrix/api/test/circuit-status
+```
+**2. Hystrix 스트림으로 실시간 데이터 확인**
+```bash
+# Hystrix가 제공하는 실시간 메트릭 스트림을 직접 확인
+curl http://localhost:8081/spring-hystrix/hystrix.stream
+```
+이 스트림은 Hystrix Dashboard에 연결하여 시각적으로 모니터링하는 데 사용됩니다. (아래 `Hystrix Dashboard 연동` 참고)
+
+---
+
+## ⚙️ 주요 설정 살펴보기 (`hystrix.properties`)
+Hystrix의 주요 동작은 `src/main/resources/hystrix.properties` 파일에서 설정합니다.
+
+```properties
+# 기본 설정 (모든 Command에 적용)
+hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=2000
+
+# failingApi Command 개별 설정
+hystrix.command.callFailingApi.circuitBreaker.requestVolumeThreshold=5
+hystrix.command.callFailingApi.circuitBreaker.errorThresholdPercentage=50
+hystrix.command.callFailingApi.circuitBreaker.sleepWindowInMilliseconds=10000
+
+# slowApi Command 개별 설정
+hystrix.command.callSlowApi.execution.isolation.thread.timeoutInMilliseconds=2000
+```
+- `execution.isolation.thread.timeoutInMilliseconds`: 타임아웃 시간 (ms)
+- `circuitBreaker.requestVolumeThreshold`: 서킷 상태를 계산하기 위한 최소 요청 횟수
+- `circuitBreaker.errorThresholdPercentage`: 서킷을 OPEN할 실패율 임계치 (%)
+- `circuitBreaker.sleepWindowInMilliseconds`: OPEN 상태 유지 시간 (ms)
+
+---
+
+## ✨ Hystrix만의 특별한 기능들
+
+### Hystrix Dashboard 연동
+이 프로젝트는 Hystrix의 상태를 실시간으로 시각화하여 보여주는 **Hystrix Dashboard**와 연동할 수 있습니다.
+
+1.  별도의 Hystrix Dashboard 애플리케이션을 실행합니다. (예: `springboot-resillience4j` 프로젝트에 대시보드를 추가하여 사용 가능)
+2.  대시보드 UI에서 이 프로젝트의 메트릭 스트림 주소인 `http://localhost:8081/spring-hystrix/hystrix.stream` 을 입력합니다.
+3.  'Monitor Stream' 버튼을 클릭하면 실시간으로 서킷의 상태, 요청량, 실패율 등을 그래프로 확인할 수 있습니다.
+
+### 동적 설정 변경
+`hystrix.properties` 파일을 직접 수정하거나, API를 통해 런타임에 Hystrix 설정을 동적으로 변경할 수 있습니다.
+
+**1. `hystrix.properties` 파일 폴링**
+- 프로젝트는 5초마다 `hystrix.properties` 파일의 변경 사항을 감지하여 자동으로 설정에 반영합니다. (Archaius 라이브러리 사용)
+
+**2. API를 통한 설정 변경**
+- 아래와 같이 `PUT` 요청을 보내면 `callFailingApi` 커맨드의 타임아웃과 실패율 임계치를 동적으로 변경할 수 있습니다.
+```bash
+curl -X PUT http://localhost:8081/spring-hystrix/api/config/callFailingApi \
   -H 'Content-Type: application/json' \
   -d '{
         "circuitBreaker": {
-          "requestVolumeThreshold": 5,
           "errorThresholdPercentage": 25
         },
         "execution": {
-          "timeoutInMilliseconds": 2500
+          "timeoutInMilliseconds": 3000
         }
       }'
 ```
-새 설정은 이후 생성되는 Hystrix 명령 인스턴스부터 적용되며, 변경 내역은 응답 `updatedProperties` 필드에서 확인할 수 있습니다.
 
-## 주요 디렉터리
-- `com.example.config` : `HystrixConfig`, `WebConfig` 등 Hystrix/Archaius 및 Spring MVC 설정이 위치합니다.
-- `com.example.controller` : `/api/*` 학습용 시나리오를 제공하는 `MyServiceTestController` 와 `/config/*` 동적 설정 API를 제공하는 `HystrixConfigController` 가 있습니다.
-- `com.example.service` : Hystrix 커맨드를 보유한 `MyService` 와 외부 API를 시뮬레이션하는 `ExternalService` 로 구성됩니다.
-- `src/main/resources/hystrix.properties` : 커맨드별 임계값, 타임아웃, 서킷 설정 등의 기본 프로퍼티를 정의합니다.
+---
 
-## 참고 사항
-- Hystrix 대시보드 스트림(`hystrix.stream`) 서블릿이 `web.xml` 에 등록되어 있으며, 톰캣 포트/컨텍스트에 따라 `http://localhost:8080/hystrix.stream` 또는 `http://localhost:8080/spring-hystrix/hystrix.stream` 으로 접근합니다.
-- 포트가 이미 사용 중이라면 톰캣이 기동되지 않을 수 있으니(`java.net.BindException`), 다른 프로세스를 종료하거나 포트를 변경하세요.
-- Archaius 폴링 주기와 관련된 실험이 끝나면 `hystrix.properties` 내 불필요한 설정은 주석 처리한 상태로 유지하는 것을 권장합니다.
+## 🔧 핵심 구현 코드 (`MyService.java`)
+서비스 로직에 `@HystrixCommand` 어노테이션을 추가하여 서킷 브레이커를 적용합니다.
+
+```java
+@Service
+public class MyService {
+
+    // 'callFailingApi'라는 Command Key를 가진 서킷 브레이커를 적용합니다.
+    // 실패 시 'fallbackFailing' 메소드가 대신 실행됩니다.
+    @HystrixCommand(commandKey = "callFailingApi", fallbackMethod = "fallbackFailing")
+    public String callFailingApi() {
+        // 이 메소드는 항상 예외를 발생시킵니다.
+        throw new RuntimeException("Always failing");
+    }
+
+    // Fallback 메소드
+    public String fallbackFailing(Throwable t) {
+        return "Fallback: Failing service is unavailable. Reason: " + t.getMessage();
+    }
+}
+```
+
+---
+
+## 📝 다음 단계
+- `hystrix.properties` 파일의 임계치 값을 직접 수정하며 서킷 브레이커의 동작이 어떻게 변하는지 테스트해보세요.
+- API를 통해 동적으로 설정을 변경하고, Hystrix Dashboard에서 변화가 즉시 반영되는지 확인해보세요.
+

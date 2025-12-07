@@ -157,3 +157,9 @@ public class MyService {
     }
 }
 ```
+---
+
+## 📝 다음 단계
+- `config-server`의 `resilience4j-application.yml` 파일에서 임계치(`threshold`) 값을 직접 수정하며 서킷 브레이커의 동작이 어떻게 변하는지 테스트해보세요.
+- 실제 외부 API를 호출하는 코드를 추가하여 실제와 유사한 환경을 시뮬레이션해보세요.
+- `spring-hystrix` 프로젝트의 예제와 비교하며 Resilience4j와 Hystrix의 차이점을 학습해보세요.
