@@ -1,12 +1,11 @@
 # Config Server - Spring Cloud Config
 
-Spring Cloud Config Server를 사용하여 서킷브레이커 설정을 동적으로 관리하는 중앙 설정 서버입니다.
+Spring Cloud Config Server를 사용하여 Resilience4j 서킷브레이커 설정을 동적으로 관리하는 중앙 설정 서버입니다.
 
 ## 🎯 목적
 
-- Circuit Breaker 설정을 중앙에서 관리
+- Resilience4j Circuit Breaker 설정을 중앙에서 관리
 - 애플리케이션 재시작 없이 동적으로 설정 변경 가능
-- Resilience4j와 Hystrix 설정을 모두 지원
 
 ## 📁 프로젝트 구조
 
@@ -18,8 +17,7 @@ config-server/
 │   └── resources/
 │       ├── application.yml                  # Config Server 설정
 │       └── config/                          # 클라이언트 설정 파일
-│           ├── resilience4j-application.yml # Resilience4j 설정
-│           └── hystrix-application.properties # Hystrix 설정
+│           └── resilience4j-application.yml # Resilience4j 설정
 ├── build.gradle
 └── README.md
 ```
@@ -44,7 +42,7 @@ spring:
 
 ### 제공되는 설정 파일
 
-#### 1. Resilience4j 설정 (resilience4j-application.yml)
+#### Resilience4j 설정 (resilience4j-application.yml)
 Spring Boot 3.2 + Resilience4j 모듈용 Circuit Breaker 설정
 
 **주요 설정값:**
@@ -55,18 +53,8 @@ Spring Boot 3.2 + Resilience4j 모듈용 Circuit Breaker 설정
 
 **인스턴스별 설정:**
 - `normalApi`: 기본 설정 사용
-- `randomApi`: 기본 설정 사용
 - `failingApi`: 30% 실패율로 빠르게 Open
 - `slowApi`: 1초 이상 느린 호출 30%로 Open
-
-#### 2. Hystrix 설정 (hystrix-application.properties)
-Spring 4.3 + Hystrix 모듈용 Circuit Breaker 설정
-
-**주요 설정값:**
-- `requestVolumeThreshold`: 최소 요청 수 (5개)
-- `errorThresholdPercentage`: 에러 임계값 (50%)
-- `sleepWindowInMilliseconds`: Circuit Open 대기 시간 (10초)
-- `timeoutInMilliseconds`: 실행 타임아웃 (3초)
 
 ## 🚀 실행 방법
 
@@ -86,9 +74,6 @@ Config Server가 제공하는 설정을 확인할 수 있습니다:
 ```bash
 # Resilience4j 설정 확인
 curl http://localhost:8888/resilience4j-application/default
-
-# Hystrix 설정 확인
-curl http://localhost:8888/hystrix-application/default
 ```
 
 ### 3. 설정 구조
@@ -103,7 +88,6 @@ Config Server는 다음과 같은 URL 패턴으로 설정을 제공합니다:
 
 **예시:**
 - `http://localhost:8888/resilience4j-application/default`
-- `http://localhost:8888/hystrix-application/default`
 
 ## 🔄 클라이언트 설정
 
@@ -123,21 +107,11 @@ spring:
     import: "optional:configserver:http://localhost:8888"
 ```
 
-### Spring Legacy 모듈 (Hystrix)
-
-`bootstrap.properties`:
-
-```properties
-spring.application.name=hystrix-application
-spring.cloud.config.uri=http://localhost:8888
-spring.cloud.config.fail-fast=true
-```
-
 ## 📊 설정 동적 변경
 
 ### 1. 설정 파일 수정
 
-`config-server/src/main/resources/config/` 디렉토리의 설정 파일을 수정합니다.
+`config-server/src/main/resources/config/` 디렉토리의 `resilience4j-application.yml` 파일을 수정합니다.
 
 ### 2. 클라이언트 애플리케이션 리프레시
 
@@ -172,8 +146,7 @@ spring:
 ```
 config-repo/
 └── circuit-breaker-configs/
-    ├── resilience4j-application.yml
-    └── hystrix-application.properties
+    └── resilience4j-application.yml
 ```
 
 ## 🔍 모니터링
@@ -237,7 +210,6 @@ encrypt:
 
 - [Spring Cloud Config Documentation](https://spring.io/projects/spring-cloud-config)
 - [Resilience4j Documentation](https://resilience4j.readme.io/)
-- [Hystrix Documentation](https://github.com/Netflix/Hystrix/wiki)
 
 ## 🎯 다음 단계
 

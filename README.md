@@ -18,9 +18,18 @@ Circuit Breaker 패턴을 **이해하고 체험**할 수 있는 간단하고 일
 
 ```
 circuit-breaker-examples/
+├── config-server/                # Spring Cloud Config Server
 ├── springboot-resillience4j/   # Spring Boot 3.2 + Resilience4j
 └── spring-hystrix/             # Spring 4.3 + Hystrix
 ```
+
+## 모듈별 상세 설명
+
+각 모듈의 자세한 실행 방법과 설명은 아래 README 링크를 참고하세요.
+
+- **`config-server`**: [README.md](./config-server/README.md)
+- **`springboot-resillience4j`**: [README.md](./springboot-resillience4j/README.md)
+- **`spring-hystrix`**: [README.md](./spring-hystrix/README.md)
 
 ## 빠른 테스트
 
@@ -28,8 +37,7 @@ circuit-breaker-examples/
 
 | 엔드포인트 | 설명 | 예상 동작 |
 |-----------|------|----------|
-| `GET /api/test/normal/{data}` | 정상 API | 항상 성공 |
-| `GET /api/test/random` | 랜덤 API | 50% 확률로 실패 |
+| `GET /api/test/normal` | 정상 API | 항상 성공 |
 | `GET /api/test/failing` | 실패 API | 항상 실패 → Circuit Open |
 | `GET /api/test/slow` | 느린 API | 타임아웃 → Fallback |
 
@@ -38,10 +46,10 @@ circuit-breaker-examples/
 #### 기본 테스트
 ```bash
 # Spring Boot Module (포트: 8080)
-curl http://localhost:8080/api/test/normal/hello
+curl http://localhost:8080/api/test/normal
 
 # Spring Legacy Module (포트: 8081) 
-curl http://localhost:8081/api/test/normal/hello
+curl http://localhost:8081/spring-hystrix/api/test/normal
 ```
 
 #### Circuit Breaker 체험

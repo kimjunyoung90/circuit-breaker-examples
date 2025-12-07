@@ -22,17 +22,13 @@ resilience4j:
       normalApi:
         base-config: default
 
-      # 2. 랜덤 API - 기본 설정 사용
-      randomApi:
-        base-config: default
-
-      # 3. 실패 API - 더 빠르게 Circuit Open
+      # 2. 실패 API - 더 빠르게 Circuit Open
       failingApi:
         base-config: default
         failure-rate-threshold: 30           # 30% 실패율로 빠르게 Open
         wait-duration-in-open-state: 5s      # 5초 후 Half-Open
 
-      # 4. 느린 API - 타임아웃 기반 Circuit Breaker
+      # 3. 느린 API - 타임아웃 기반 Circuit Breaker
       slowApi:
         base-config: default
         slow-call-duration-threshold: 1s     # 1초 이상이면 느린 호출
