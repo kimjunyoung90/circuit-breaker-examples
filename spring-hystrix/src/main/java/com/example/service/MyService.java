@@ -18,7 +18,7 @@ public class MyService {
             fallbackMethod = "fallbackNormal"
     )
     public String callNormalApi() {
-        return "Normal API Response: Success";
+        return externalService.callNormalExternalApi();
     }
 
     public String fallbackNormal() {
@@ -34,7 +34,7 @@ public class MyService {
             fallbackMethod = "fallbackFailing"
     )
     public String callFailingApi() {
-        return externalService.callFailingApi();
+        return externalService.callFailingExternalApi();
     }
 
     public String fallbackFailing() {
@@ -50,7 +50,7 @@ public class MyService {
             fallbackMethod = "fallbackSlow"
     )
     public String callSlowApi() {
-        return externalService.callSlowApi();
+        return externalService.callSlowExternalApi();
     }
 
     public String fallbackSlow() {

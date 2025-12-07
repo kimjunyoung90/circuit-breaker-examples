@@ -2,50 +2,42 @@ package com.example.service;
 
 import org.springframework.stereotype.Component;
 
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-
 /**
  * 외부 API 호출을 시뮬레이션하며 Hystrix 데모 시나리오를 제공
  */
 @Component
 public class ExternalService {
 
-    private final Random random = new Random();
-
     /**
-     * 항상 실패하는 API 호출 시뮬레이션 (Circuit Breaker 테스트용)
+     * 1. 정상적인 외부 API 응답
      */
-    public String callFailingApi() {
-        simulateDelay(50, 200);
-
-        // 매우 낮은 확률로만 성공 (5%)
-        if (random.nextInt(100) < 5) {
-            return "{\"message\":\"Miracle! Failing API succeeded\", \"timestamp\":" + System.currentTimeMillis() + "}";
-        } else {
-            throw new RuntimeException("Failing API intentionally failed");
-        }
+    public String callNormalExternalApi() {
+        simulateDelay(100);
+        return "External API Response: Success";
     }
 
     /**
-     * 느린 API 호출 시뮬레이션 (타임아웃 테스트용)
+     * 2. 느린 외부 API 응답 (3초 지연)
      */
-    public String callSlowApi() {
-        simulateDelay(3000, 6000); // 3-6초 지연 (타임아웃 초과)
-        return "{\"message\":\"Slow API response\", \"processingTime\":\"" + (3000 + random.nextInt(3000)) + "ms\", \"timestamp\":" + System.currentTimeMillis() + "}";
+    public String callSlowExternalApi() {
+        simulateDelay(3000);
+        return "External API Response: Slow (3s)";
     }
 
     /**
-     * 네트워크 지연 시뮬레이션을 위한 헬퍼 메서드
+     * 3. 실패하는 외부 API
      */
-    private void simulateDelay(int minMs, int maxMs) {
+    public String callFailingExternalApi() {
+        simulateDelay(100);
+        throw new RuntimeException("External Service Failure: 503 Service Unavailable");
+    }
+
+    private void simulateDelay(long millis) {
         try {
-            int delay = minMs + random.nextInt(maxMs - minMs);
-            TimeUnit.MILLISECONDS.sleep(delay);
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("API call interrupted", e);
         }
     }
-
 }
