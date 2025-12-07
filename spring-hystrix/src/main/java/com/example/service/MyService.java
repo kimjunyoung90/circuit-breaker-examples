@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class MyService {
     @Autowired
-    private OuterService outerService;
+    private ExternalService externalService;
 
     /**
      * 1. 정상적인 API 호출 (항상 성공)
@@ -34,7 +34,7 @@ public class MyService {
             fallbackMethod = "fallbackFailing"
     )
     public String callFailingApi() {
-        return outerService.callFailingApi();
+        return externalService.callFailingApi();
     }
 
     public String fallbackFailing() {
@@ -50,7 +50,7 @@ public class MyService {
             fallbackMethod = "fallbackSlow"
     )
     public String callSlowApi() {
-        return outerService.callSlowApi();
+        return externalService.callSlowApi();
     }
 
     public String fallbackSlow() {

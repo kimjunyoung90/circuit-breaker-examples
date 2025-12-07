@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  * 외부 API 호출을 시뮬레이션하며 Hystrix 데모 시나리오를 제공
  */
 @Component
-public class OuterService {
+public class ExternalService {
 
     private final Random random = new Random();
 

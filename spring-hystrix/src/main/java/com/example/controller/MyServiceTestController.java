@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Controller
 @RequestMapping("/api")
-public class MyServiceController {
+public class MyServiceTestController {
 
     @Autowired
     private MyService myService;
